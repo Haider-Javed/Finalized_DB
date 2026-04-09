@@ -1,0 +1,472 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   NATIONAL COMPETITIONS  —  append to the bottom of App.css
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Table wrapper ─────────────────────────────────────────────────────── */
+.natl-table-wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+/* ── Shared flex row (header + data) ───────────────────────────────────── */
+.natl-row-grid {
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  min-width: 1000px;
+  box-sizing: border-box;
+  padding: 0 1.2rem;
+}
+
+.natl-header-row.natl-row-grid {
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  font-size: 0.67rem;
+  letter-spacing: 0.07em;
+  color: #8899bb;
+  text-transform: uppercase;
+}
+
+.natl-data-row.natl-row-grid {
+  padding-top: 0.9rem;
+  padding-bottom: 0.9rem;
+}
+
+/* ── Cell ──────────────────────────────────────────────────────────────── */
+.natl-col {
+  flex-shrink: 0;
+  flex-grow: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-right: 10px;
+  box-sizing: border-box;
+  font-size: 0.81rem;
+  color: #c8d4ee;
+  line-height: 1.4;
+  overflow: hidden;
+}
+
+.natl-col-head {
+  font-size: 0.67rem;
+  letter-spacing: 0.07em;
+  color: #8899bb;
+  text-transform: uppercase;
+}
+
+/* ── Specific cell styles ──────────────────────────────────────────────── */
+.comp-name {
+  font-weight: 700;
+  color: #e8eeff;
+  font-size: 0.87rem;
+  word-break: break-word;
+}
+
+.natl-venue {
+  font-size: 0.74rem;
+  color: #8899bb;
+  line-height: 1.4;
+}
+
+.natl-fee {
+  font-size: 0.75rem;
+  color: #a0b8e0;
+}
+
+.natl-month-badge {
+  background: rgba(99,140,255,0.15);
+  border: 1px solid rgba(99,140,255,0.3);
+  color: #7eaaff;
+  border-radius: 20px;
+  padding: 3px 9px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.natl-yes  { color: #6dffb0; font-weight: 700; font-size: 0.82rem; white-space: nowrap; }
+.natl-no   { color: #ff6d6d; font-weight: 700; font-size: 0.82rem; white-space: nowrap; }
+
+.natl-physical {
+  background: rgba(99,200,255,0.12);
+  border: 1px solid rgba(99,200,255,0.3);
+  color: #63c8ff;
+  border-radius: 20px;
+  padding: 3px 9px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.natl-online {
+  background: rgba(109,255,176,0.12);
+  border: 1px solid rgba(109,255,176,0.3);
+  color: #6dffb0;
+  border-radius: 20px;
+  padding: 3px 9px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.natl-lang-chips { display: flex; flex-wrap: wrap; gap: 3px; }
+.natl-lang-chip  {
+  border-radius: 5px;
+  padding: 2px 6px;
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.natl-empty {
+  text-align: center;
+  padding: 2.5rem;
+  color: #556080;
+  font-size: 0.88rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOOLBAR  (filters row + right controls)
+═══════════════════════════════════════════════════════════════════════════ */
+.natl-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.natl-toolbar-left,
+.natl-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.natl-toolbar-label {
+  font-size: 0.8rem;
+  color: #8899bb;
+  margin-right: 2px;
+}
+
+/* ── SQL bar (ORDER BY / GROUP BY / chips) ─────────────────────────────── */
+.natl-sql-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+}
+
+.natl-result-count {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: #5566aa;
+  white-space: nowrap;
+}
+
+/* ── Generic control button ────────────────────────────────────────────── */
+.natl-ctrl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  color: #c8d4ee;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+}
+.natl-ctrl-btn:hover {
+  background: rgba(99,140,255,0.12);
+  border-color: rgba(99,140,255,0.35);
+}
+
+/* Accent variant for SHOW / LIMIT */
+.natl-ctrl-accent {
+  border-color: rgba(99,140,255,0.4);
+  color: #7eaaff;
+}
+
+/* SQL toggle button */
+.natl-sql-toggle {
+  color: #63c8ff;
+  border-color: rgba(99,200,255,0.35);
+}
+.natl-sql-toggle:hover {
+  background: rgba(99,200,255,0.1);
+}
+
+/* Chevron rotate when open */
+.chevron-open { transform: rotate(180deg); }
+
+/* Small badge inside button */
+.natl-badge {
+  background: rgba(99,140,255,0.25);
+  color: #a0c0ff;
+  border-radius: 20px;
+  padding: 1px 7px;
+  font-size: 0.67rem;
+  font-weight: 700;
+}
+
+/* ── Active filter chips ────────────────────────────────────────────────── */
+.natl-active-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.natl-active-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(99,140,255,0.14);
+  border: 1px solid rgba(99,140,255,0.3);
+  color: #99bbff;
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.natl-active-chip svg { cursor: pointer; opacity: 0.7; }
+.natl-active-chip svg:hover { opacity: 1; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DROPDOWN PANELS
+═══════════════════════════════════════════════════════════════════════════ */
+.natl-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: #0d1525;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  z-index: 200;
+  min-width: 220px;
+  max-height: 260px;
+  overflow-y: auto;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+}
+.natl-dropdown-menu li {
+  padding: 9px 16px;
+  font-size: 0.82rem;
+  color: #c8d4ee;
+  cursor: pointer;
+  transition: background 0.12s;
+  white-space: nowrap;
+}
+.natl-dropdown-menu li:hover { background: rgba(99,140,255,0.1); }
+.natl-dropdown-menu li.active { color: #7eaaff; font-weight: 700; }
+
+/* ── SHOW columns panel ────────────────────────────────────────────────── */
+.natl-show-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: #0d1525;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 10px 14px;
+  z-index: 200;
+  min-width: 190px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+}
+.natl-show-title {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #5566aa;
+  margin: 0 0 8px;
+}
+.natl-show-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: 0.82rem;
+  color: #c8d4ee;
+  cursor: pointer;
+}
+.natl-show-row input[type="checkbox"] { accent-color: #7eaaff; cursor: pointer; }
+.natl-show-all {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 5px 0;
+  background: rgba(99,140,255,0.12);
+  border: 1px solid rgba(99,140,255,0.25);
+  border-radius: 6px;
+  color: #7eaaff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+}
+.natl-show-all:hover { background: rgba(99,140,255,0.22); }
+
+.natl-active-opt { color: #7eaaff; font-weight: 700; }
+
+/* ── LIMIT panel ───────────────────────────────────────────────────────── */
+.natl-limit-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: #0d1525;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 10px 14px;
+  z-index: 200;
+  min-width: 160px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+}
+.natl-limit-opt {
+  display: block;
+  width: 100%;
+  padding: 7px 10px;
+  margin-bottom: 4px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 7px;
+  color: #c8d4ee;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+}
+.natl-limit-opt:hover   { background: rgba(99,140,255,0.1); }
+.natl-limit-opt.active  { color: #7eaaff; border-color: rgba(99,140,255,0.4); background: rgba(99,140,255,0.14); }
+.natl-limit-custom      { margin-top: 8px; }
+
+/* ── Payment range panel ───────────────────────────────────────────────── */
+.natl-pay-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: #0d1525;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 14px 16px;
+  z-index: 200;
+  min-width: 240px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+}
+.natl-pay-title {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #5566aa;
+  margin: 0 0 10px;
+}
+.natl-pay-row   { display: flex; align-items: center; gap: 8px; }
+.natl-pay-field { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.natl-pay-field label { font-size: 0.7rem; color: #8899bb; }
+.natl-pay-sep   { color: #8899bb; padding-top: 14px; }
+.natl-pay-input {
+  width: 100%;
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 7px;
+  color: #e8eeff;
+  font-size: 0.82rem;
+  outline: none;
+  box-sizing: border-box;
+}
+.natl-pay-input:focus { border-color: rgba(99,140,255,0.5); background: rgba(99,140,255,0.08); }
+.natl-pay-actions  { display: flex; gap: 8px; margin-top: 12px; }
+.natl-pay-clear {
+  flex: 1;
+  padding: 6px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 7px;
+  color: #8899bb;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.natl-pay-apply {
+  flex: 1;
+  padding: 6px;
+  background: rgba(99,140,255,0.2);
+  border: 1px solid rgba(99,140,255,0.4);
+  border-radius: 7px;
+  color: #7eaaff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.natl-pay-apply:hover { background: rgba(99,140,255,0.35); }
+
+/* ── Direction buttons (ASC / DESC) ────────────────────────────────────── */
+.natl-dir-row  { display: flex; gap: 6px; margin-top: 8px; }
+.natl-dir-btn  {
+  flex: 1;
+  padding: 5px 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  color: #8899bb;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.natl-dir-btn.active {
+  background: rgba(99,140,255,0.18);
+  border-color: rgba(99,140,255,0.45);
+  color: #7eaaff;
+}
+
+/* ── SQL code panel ─────────────────────────────────────────────────────── */
+.natl-sql-panel {
+  margin-bottom: 14px;
+  background: #080f1e;
+  border: 1px solid rgba(99,200,255,0.2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.natl-sql-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: rgba(99,200,255,0.07);
+  font-size: 0.75rem;
+  color: #63c8ff;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+.natl-sql-copy {
+  background: rgba(99,200,255,0.15);
+  border: 1px solid rgba(99,200,255,0.3);
+  border-radius: 5px;
+  color: #63c8ff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+.natl-sql-copy:hover { background: rgba(99,200,255,0.28); }
+.natl-sql-code {
+  margin: 0;
+  padding: 14px 16px;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 0.8rem;
+  color: #a8d8ff;
+  line-height: 1.7;
+  white-space: pre;
+  overflow-x: auto;
+}
