@@ -13,6 +13,7 @@
   "dependencies": {
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "mogoose": "^0.0.1-security"
+    "mogoose": "^0.0.1-security",
+    "mongoose": "^9.4.1"
   }
 }

@@ -1,58 +1,187 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   Sparkles, Aperture, ArrowUpRight, Loader2,
   Globe2, Flag, Users, UserCircle,
   Calendar, Clock, Timer, ChevronDown,
-  Filter, Trophy, Code2, MonitorPlay, Terminal, Database
+  Filter, Trophy, Code2, MonitorPlay, Terminal, Database, Upload,
+  Mail, Lock, User
 } from 'lucide-react';
 import { FaTwitter, FaInstagram, FaFacebook } from 'react-icons/fa';
+import WelcomeBackground from './WelcomeBackground';
 import NationalCompetitions from './NationalCompetitions';
+import InternationalCompetitions from './InternationalCompetitions';
+import Leaderboard from './Leaderboard';
+import Problems from './Problems';
+import CPBackground from './CPBackground';
+import ContactUs from './ContactUs';
+import Resources from './Resources';
+import './Hub.css';
 import './App.css';
 
 function App() {
-  const [currentView, setCurrentView] = useState('signup');
+  const [currentView, setCurrentView] = useState('signup'); // 'signup', 'login', 'welcome', ...
+  const [user, setUser] = useState(null); // { userId, username, email, profilePic }
+  const [errorMsg, setErrorMsg] = useState('');
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  
+  const fileInputRef = useRef(null);
 
-  const handleSignUp               = (e) => { e.preventDefault(); setCurrentView('welcome'); };
-  const handleViewCompetitions     = () => setCurrentView('competitions');
-  const handleViewIntlCompetitions = () => setCurrentView('intl-competitions');
-  const handleViewNatlCompetitions = () => setCurrentView('natl-competitions');
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    setErrorMsg('');
+    const username = e.target.username.value;
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+    const confirm = e.target.confirmPassword.value;
+
+    if (password !== confirm) return setErrorMsg("Passwords do not match");
+
+    try {
+      const res = await fetch('http://localhost:3000/signup', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      setUser({ userId: data.user._id, username: data.user.username, email: data.user.email, profilePic: data.user.profilePic });
+      setCurrentView('welcome');
+    } catch (err) {
+      setErrorMsg(err.message);
+    }
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setErrorMsg('');
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+
+    try {
+      const res = await fetch('http://localhost:3000/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      setUser({ userId: data.user._id, username: data.user.username, email: data.user.email, profilePic: data.user.profilePic });
+      setCurrentView('welcome');
+    } catch (err) {
+      setErrorMsg(err.message);
+    }
+  };
+
+  const handleProfileClick = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    setShowProfileDropdown(false);
+    if (!file || !user) return;
+    
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result;
+      setUser({ ...user, profilePic: base64String }); // Optimistic update
+      
+      try {
+        await fetch('http://localhost:3000/update-profile', {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.userId, profilePic: base64String })
+        });
+      } catch (err) {
+        console.error("Failed to update profile pic:", err);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const renderProfileCircle = () => {
+    if (!user) return <UserCircle className="profile-icon" />;
+    return (
+      <>
+        <label htmlFor="profile-upload" className="profile-wrapper" title="Change Profile Picture" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', margin: 0 }}>
+          <span className="profile-username">{user.username}</span>
+          {user.profilePic ? (
+            <img src={user.profilePic} alt="profile" className="profile-circle-img" style={{ transition: 'transform 0.2s', border: '2px solid rgba(255,255,255,0.1)' }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.borderColor = `rgba(255,255,255,0.3)`; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = `rgba(255,255,255,0.1)`; }} />
+          ) : (
+            <div className="profile-circle-text" style={{ transition: 'transform 0.2s', border: '2px solid rgba(255,255,255,0.1)' }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.borderColor = `rgba(255,255,255,0.3)`; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = `rgba(255,255,255,0.1)`; }}>
+              {user.username.charAt(0).toUpperCase()}
+            </div>
+          )}
+        </label>
+
+        {/* Always in DOM so the file dialog can open reliably */}
+        <input
+          id="profile-upload"
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept="image/*"
+          style={{ display: 'none' }}
+        />
+      </>
+    );
+  };
 
   // ── National Competitions ─────────────────────────────────────────────────
   if (currentView === 'natl-competitions') {
     return <NationalCompetitions onBack={() => setCurrentView('competitions')} />;
   }
 
+  // ── Leaderboard ───────────────────────────────────────────────────────────
+  if (currentView === 'leaderboard') {
+    return <Leaderboard onBack={() => setCurrentView('competitions')} />;
+  }
+
+  // ── International Competitions ────────────────────────────────────────────
+  if (currentView === 'intl-competitions') {
+    return <InternationalCompetitions onBack={() => setCurrentView('competitions')} />;
+  }
+
   // ── Welcome ───────────────────────────────────────────────────────────────
   if (currentView === 'welcome') {
     return (
       <div className="app-container dashboard-bg">
-        <div className="bg-glow"></div>
-        <div className="star-field"></div>
-        <main className="welcome-main">
-          <div className="logo-box">
-            <Aperture className="logo-icon-large" color="#ffffff" />
-          </div>
-          <div className="status-pill">
-            <div className="pulse-dot"></div>
-            <span>REAL TIME TRACKING</span>
-          </div>
-          <h1 className="welcome-title">Welcome To <span className="italic">Contest Hub</span></h1>
-          <p className="welcome-subtitle">"The centralized dashboard for competitive programmers to track, filter, and master global coding challenges."</p>
-          <button className="view-competitions-btn" onClick={handleViewCompetitions}>
-            View Competitions <ArrowUpRight className="arrow-icon" />
-          </button>
-          <div className="social-links">
-            <a href="#"><FaTwitter className="social-icon" /></a>
-            <span className="separator"></span>
-            <a href="#"><FaInstagram className="social-icon" /></a>
-            <span className="separator"></span>
-            <a href="#"><FaFacebook className="social-icon" /></a>
+        <WelcomeBackground />
+        
+        <main className="welcome-main premium-hero">
+          <div className="hero-glass-card">
+            <div className="status-pill premium-status-pill">
+              <div className="pulse-dot"></div>
+              <span>SYSTEM ONLINE • SECURE CONNECTION</span>
+            </div>
+            
+            <h1 className="welcome-title main-title">
+              <span className="title-pretext">Welcome to</span><br />
+              <span className="aesthetic-gradient">Contest Hub</span>
+            </h1>
+            
+            <p className="welcome-subtitle premium-subtitle">
+              The centralized dashboard for competitive programmers.<br/>
+              Track, filter, and master global algorithmic challenges.
+            </p>
+            
+            <div className="hero-actions">
+              <button className="premium-btn" onClick={() => setCurrentView('competitions')}>
+                <span className="btn-text">Initialize Dashboard</span>
+                <span className="btn-icon-wrapper">
+                  <ArrowUpRight className="arrow-icon" size={18} />
+                </span>
+                <div className="btn-glow"></div>
+              </button>
+            </div>
+            
+            <div className="hero-socials">
+              <a href="#" className="social-icon-wrapper"><FaTwitter size={20} /></a>
+              <a href="#" className="social-icon-wrapper"><FaInstagram size={20} /></a>
+              <a href="#" className="social-icon-wrapper"><FaFacebook size={20} /></a>
+            </div>
           </div>
         </main>
-        <div className="reconnecting-footer">
-          <Loader2 className="spinner-icon" />
-          <p><strong>Reconnecting.</strong> Just a moment...</p>
-        </div>
       </div>
     );
   }
@@ -61,127 +190,177 @@ function App() {
   if (currentView === 'competitions') {
     return (
       <div className="app-container dashboard-bg">
-        <div className="star-field"></div>
-        <div className="bg-glow"></div>
+        <WelcomeBackground />
+        
         <header className="competitions-header">
           <div className="logo">
             <Aperture className="logo-icon glow-icon" color="#e0e0e0" />
             <span className="logo-text">CONTEST <span className="logo-accent">HUB</span></span>
           </div>
-          <nav className="comps-nav">
-            <a href="#" className="active">Home</a>
-            <a href="#">Contests</a>
-            <a href="#">Leaderboards</a>
-            <a href="#">Problems</a>
-            <a href="#" className="profile-link">Profile <UserCircle className="profile-icon" /></a>
+          <nav className="comps-nav premium-nav">
+            <a href="#" className="active" onClick={(e) => { e.preventDefault(); setCurrentView('competitions'); }}>Home</a>
+            <a href="https://calendar.google.com" target="_blank" rel="noopener noreferrer">Calendar</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('resources'); }}>Resources</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('contact'); }}>Contact Us</a>
+            <div className="profile-link">
+              {renderProfileCircle()}
+            </div>
           </nav>
         </header>
-        <main className="comps-main">
-          <div className="comps-hero">
-            <h2 className="comps-subtitle">WELCOME TO</h2>
-            <h1 className="comps-title">CONTEST HUB</h1>
-            <p className="comps-desc">Where logic and programming meet competition.</p>
+
+        <main className="hub-main">
+          <div className="hub-hero" style={{ marginTop: '3rem' }}>
+            <h1 className="main-title" style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>
+              <span className="aesthetic-gradient">ContestHUB</span>
+            </h1>
+            <p className="premium-subtitle" style={{ margin: '0 auto' }}>
+              Select a module to begin your competitive programming journey.
+            </p>
           </div>
-          <div className="comps-grid">
-            <div className="comp-card">
-              <div className="comp-card-header">
-                <Globe2 className="comp-card-icon" />
-                <h3>INTERNATIONAL<br/>COMPETITION</h3>
+          
+          <div className="hub-grid">
+            
+            {/* International */}
+            <div className="hub-card intl-card" onClick={() => setCurrentView('intl-competitions')}>
+              <div className="hub-card-content">
+                <div className="hub-card-header">
+                  <div className="hub-icon-wrapper">
+                    <Globe2 size={28} />
+                  </div>
+                  <h3>International<br/>Competitions</h3>
+                </div>
+                <p>Compete on a global scale. Participate in prestigious algorithmic contests against the best worldwide.</p>
+                <div className="hub-card-footer">
+                  <span className="hub-action-text">Join Contests</span>
+                  <div className="hub-arrow"><ArrowUpRight size={16} color="#60a5fa" /></div>
+                </div>
               </div>
-              <p>Participate in global coding contests and compete with top programmers worldwide.</p>
-              <button className="comp-card-btn" onClick={handleViewIntlCompetitions}>JOIN CONTESTS</button>
             </div>
-            <div className="comp-card">
-              <div className="comp-card-header">
-                <Flag className="comp-card-icon" />
-                <h3>NATIONAL<br/>COMPETITION</h3>
+            
+            {/* National */}
+            <div className="hub-card natl-card" onClick={() => setCurrentView('natl-competitions')}>
+              <div className="hub-card-content">
+                <div className="hub-card-header">
+                  <div className="hub-icon-wrapper">
+                    <Flag size={28} />
+                  </div>
+                  <h3>National<br/>Competitions</h3>
+                </div>
+                <p>Dominate your local region. Climb the national leaderboards and showcase your localized talent.</p>
+                <div className="hub-card-footer">
+                  <span className="hub-action-text">Join Contests</span>
+                  <div className="hub-arrow"><ArrowUpRight size={16} color="#f472b6" /></div>
+                </div>
               </div>
-              <p>Challenge local talent and climb the national leaderboards in diverse algorithmic challenges.</p>
-              <button className="comp-card-btn" onClick={handleViewNatlCompetitions}>JOIN CONTESTS</button>
             </div>
-            <div className="comp-card">
-              <div className="comp-card-header">
-                <Users className="comp-card-icon" />
-                <h3>MAKE YOUR<br/>OWN TEAM</h3>
+            
+            {/* Problems Section */}
+            <div className="hub-card prob-card" onClick={() => setCurrentView('problems')}>
+              <div className="hub-card-content">
+                <div className="hub-card-header">
+                  <div className="hub-icon-wrapper">
+                    <Code2 size={28} />
+                  </div>
+                  <h3>Algorithmic<br/>Problems</h3>
+                </div>
+                <p>Sharpen your logic. Solve varying difficulty problems and master specialized data structures.</p>
+                <div className="hub-card-footer">
+                  <span className="hub-action-text">Solve Now</span>
+                  <div className="hub-arrow"><ArrowUpRight size={16} color="#10b981" /></div>
+                </div>
               </div>
-              <p>Form a coding squad with friends or colleagues for collaborative team contests.</p>
-              <button className="comp-card-btn">CREATE TEAM</button>
             </div>
+            
+            {/* Leaderboard */}
+            <div className="hub-card rank-card" onClick={() => setCurrentView('leaderboard')}>
+              <div className="hub-card-content">
+                <div className="hub-card-header">
+                  <div className="hub-icon-wrapper">
+                    <Trophy size={28} />
+                  </div>
+                  <h3>Global<br/>Leaderboard</h3>
+                </div>
+                <p>See where you stand. Track the rankings of top tier programmers and compare your accounts.</p>
+                <div className="hub-card-footer">
+                  <span className="hub-action-text">View Rankings</span>
+                  <div className="hub-arrow"><ArrowUpRight size={16} color="#f59e0b" /></div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </main>
       </div>
     );
   }
 
-  // ── International Competitions ────────────────────────────────────────────
-  if (currentView === 'intl-competitions') {
-    const dummyCompetitions = [
-      { platform: "Meta",       name: "Meta Hacker Cup 2026 - Round 2",    start: "12 Oct, 10:00", duration: "3h 00m", countdown: "T-minus 05:20:10", status: "Upcoming",               icon: <MonitorPlay className="plat-icon text-blue-400" /> },
-      { platform: "Google",     name: "Google Code Jam - Finals",           start: "15 Oct, 14:00", duration: "4h 00m", countdown: "T-minus 03:14:00", status: "Upcoming - Register Now", icon: <Terminal className="plat-icon text-green-400" /> },
-      { platform: "ICPC",       name: "ICPC World Finals 2026",             start: "20 Oct, 09:00", duration: "5h 00m", countdown: "T-minus 08:00:00", status: "Upcoming",               icon: <Globe2 className="plat-icon text-indigo-400" /> },
-      { platform: "AtCoder",    name: "AtCoder Grand Contest 080",          start: "--",            duration: "2h 30m", countdown: "--",               status: "Ongoing",                icon: <Trophy className="plat-icon text-purple-400" /> },
-      { platform: "Codeforces", name: "Codeforces Round #950 (Div. 1)",     start: "05 Nov, 17:35", duration: "2h 00m", countdown: "T-minus 32:00:00", status: "Upcoming",               icon: <Code2 className="plat-icon text-red-400" /> },
-      { platform: "Topcoder",   name: "Topcoder SRM 888",                   start: "--",            duration: "1h 30m", countdown: "--",               status: "Finished",               icon: <Database className="plat-icon text-orange-400" /> },
-      { platform: "LeetCode",   name: "LeetCode Weekly Contest 410",        start: "11 Oct, 08:00", duration: "1h 30m", countdown: "T-minus 01:10:05", status: "Starts Soon",            icon: <Code2 className="plat-icon text-yellow-500" /> },
-    ];
+  // ── Problems ──────────────────────────────────────────────────────────────
+  if (currentView === 'problems') {
+    return <Problems onBack={() => setCurrentView('competitions')} user={user} />;
+  }
 
+  // ── Contact Us ────────────────────────────────────────────────────────────
+  if (currentView === 'contact') {
+    return <ContactUs onBack={() => setCurrentView('competitions')} />;
+  }
+
+  // ── Resources ─────────────────────────────────────────────────────────────
+  if (currentView === 'resources') {
+    return <Resources onBack={() => setCurrentView('competitions')} />;
+  }
+
+  // ── Login Component Block ──────────────────────────────────────────────────
+  if (currentView === 'login') {
     return (
-      <div className="app-container dashboard-bg intl-bg">
-        <div className="star-field"></div>
+      <div className="auth-container">
+        <CPBackground />
         <div className="bg-glow"></div>
-        <header className="intl-header">
-          <button className="back-btn" onClick={() => setCurrentView('competitions')}>&larr; Back</button>
-          <div className="logo center-logo">
+        
+        <header className="auth-header">
+          <div className="logo">
             <Aperture className="logo-icon glow-icon" color="#e0e0e0" />
             <span className="logo-text">CONTEST <span className="logo-accent">HUB</span></span>
           </div>
-          <div className="header-placeholder"></div>
         </header>
-        <main className="intl-main">
-          <h1 className="intl-title">International Competitions</h1>
-          <div className="intl-filters">
-            <div className="filter-group">
-              <Filter className="filter-icon" />
-              <span>Filters:</span>
-            </div>
-            <div className="filter-dropdowns">
-              <div className="dropdown"><span>Platform</span><ChevronDown className="dropdown-icon" /></div>
-              <div className="dropdown"><span>Status</span><ChevronDown className="dropdown-icon" /></div>
-            </div>
+
+        <main className="auth-main">
+          <div className="auth-hero">
+            <h1 className="hero-title">Welcome <span className="italic">Back</span></h1>
+            <p className="hero-subtitle">Login to access your high-performance dashboard</p>
           </div>
-          <div className="comp-list">
-            <div className="comp-list-header">
-              <div className="col-platform">Platform</div>
-              <div className="col-event">Contest Name</div>
-              <div className="col-start">Start Time</div>
-              <div className="col-duration">Duration</div>
-              <div className="col-countdown">Countdown</div>
-              <div className="col-action"></div>
-            </div>
-            {dummyCompetitions.map((comp, idx) => (
-              <div className="comp-row" key={idx}>
-                <div className="col-platform">
-                  <div className="plat-icon-wrapper">{comp.icon}</div>
-                  <span className="plat-name">{comp.platform}</span>
-                </div>
-                <div className="col-event">
-                  <span className="comp-name">{comp.name}</span>
-                  <span className={`comp-status status-${comp.status.toLowerCase().split(' ')[0]}`}>{comp.status}</span>
-                </div>
-                <div className="col-start">
-                  {comp.start !== '--' ? <Calendar className="cell-icon" /> : null}
-                  {comp.start}
-                </div>
-                <div className="col-duration"><Clock className="cell-icon" />{comp.duration}</div>
-                <div className="col-countdown">
-                  {comp.countdown !== '--' ? <Timer className="cell-icon" /> : null}
-                  <span className="countdown-text">{comp.countdown}</span>
-                </div>
-                <div className="col-action">
-                  <button className="join-btn">{comp.status === 'Finished' ? 'View Details' : 'Join Contest'}</button>
+
+          <div className="form-container glass-panel">
+            {errorMsg && <div className="error-alert">{errorMsg}</div>}
+            <form onSubmit={handleLogin} className="auth-form">
+              
+              <div className="input-group has-icon">
+                <label htmlFor="email">Email Address</label>
+                <div className="input-wrapper">
+                  <Mail className="input-icon" size={18} />
+                  <input type="email" id="email" required placeholder="name@example.com" />
                 </div>
               </div>
-            ))}
+              
+              <div className="input-group has-icon">
+                <label htmlFor="password">Password</label>
+                <div className="input-wrapper">
+                  <Lock className="input-icon" size={18} />
+                  <input type="password" id="password" required placeholder="Enter your password" />
+                </div>
+              </div>
+              
+              <button type="submit" className="submit-btn glowing-btn">
+                <span>Secure Login</span>
+                <ArrowUpRight size={16} />
+              </button>
+            </form>
+            
+            <div className="auth-footer">
+              <span className="text-muted">Need an account?</span>
+              <button type="button" className="text-link" onClick={() => setCurrentView('signup')}>
+                Sign up instead
+              </button>
+            </div>
           </div>
         </main>
       </div>
@@ -190,49 +369,72 @@ function App() {
 
   // ── Sign-up (default) ─────────────────────────────────────────────────────
   return (
-    <div className="app-container">
+    <div className="auth-container">
+      <CPBackground />
       <div className="bg-glow"></div>
-      <header>
+      
+      <header className="auth-header">
         <div className="logo">
-          <Aperture className="logo-icon" color="#e0e0e0" />
-          <span>ContestHUB</span>
+          <Aperture className="logo-icon glow-icon" color="#e0e0e0" />
+          <span className="logo-text">CONTEST <span className="logo-accent">HUB</span></span>
         </div>
-        <div className="nav-links-container">
-          <ul className="nav-links">
-            <li><a href="#">Calender</a></li>
-            <li><a href="#">Platforms</a></li>
-            <li><a href="#">Rankings</a></li>
-            <li><a href="#">Resources</a></li>
-            <li><a href="#">Contact</a></li>
-          </ul>
-        </div>
-        <button className="header-btn" type="button">
-          <Sparkles className="sparkle" />Sign Up
-        </button>
       </header>
-      <main>
-        <div className="signup-pill">
-          <Sparkles className="signup-pill-icon" /><span>SIGN UP</span>
+
+      <main className="auth-main">
+        <div className="auth-hero">
+          <h1 className="hero-title">Join the <span className="italic">Elite</span></h1>
+          <p className="hero-subtitle">Create an account to track your global algorithmic journey</p>
         </div>
-        <h1 className="hero-title">Join us <span className="italic">Anytime</span></h1>
-        <p className="hero-subtitle">Sign up to embark on a new journey</p>
-        <div className="form-container">
-          <form onSubmit={handleSignUp}>
-            <div className="input-group">
+
+        <div className="form-container glass-panel">
+          {errorMsg && <div className="error-alert">{errorMsg}</div>}
+          <form onSubmit={handleSignUp} className="auth-form">
+            
+            <div className="input-group has-icon">
+              <label htmlFor="username">Username</label>
+              <div className="input-wrapper">
+                <User className="input-icon" size={18} />
+                <input type="text" id="username" required placeholder="coder_ninja" />
+              </div>
+            </div>
+            
+            <div className="input-group has-icon">
               <label htmlFor="email">Email Address</label>
-              <input type="email" id="email" placeholder="Email@example.com" />
+              <div className="input-wrapper">
+                <Mail className="input-icon" size={18} />
+                <input type="email" id="email" required placeholder="name@example.com" />
+              </div>
             </div>
-            <div className="input-group">
-              <label htmlFor="password">Password</label>
-              <input type="password" id="password" placeholder="Enter Password" />
+            
+            <div className="form-row">
+              <div className="input-group has-icon">
+                <label htmlFor="password">Password</label>
+                <div className="input-wrapper">
+                  <Lock className="input-icon" size={18} />
+                  <input type="password" id="password" required placeholder="••••••••" />
+                </div>
+              </div>
+              <div className="input-group has-icon">
+                <label htmlFor="confirmPassword">Confirm</label>
+                <div className="input-wrapper">
+                  <Lock className="input-icon" size={18} />
+                  <input type="password" id="confirmPassword" required placeholder="••••••••" />
+                </div>
+              </div>
             </div>
-            <div className="input-group">
-              <label htmlFor="confirmPassword">Confirm Password</label>
-              <input type="password" id="confirmPassword" placeholder="Confirm Password" />
-            </div>
-            <button type="submit" className="submit-btn">Sign Up</button>
-            <a href="#" className="login-link">Already have an account?</a>
+
+            <button type="submit" className="submit-btn glowing-btn">
+              <span>Create Account</span>
+              <ArrowUpRight size={16} />
+            </button>
           </form>
+
+          <div className="auth-footer">
+            <span className="text-muted">Already have a pass?</span>
+            <button type="button" className="text-link" onClick={() => setCurrentView('login')}>
+              Login here
+            </button>
+          </div>
         </div>
       </main>
     </div>
