@@ -138,6 +138,9 @@
   flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 12px;
+  position: relative;
+  z-index: 220;
+  overflow: visible;
 }
 
 .natl-toolbar-left,
@@ -254,7 +257,7 @@
   list-style: none;
   margin: 0;
   padding: 6px 0;
-  z-index: 200;
+  z-index: 260;
   min-width: 220px;
   max-height: 260px;
   overflow-y: auto;
@@ -280,7 +283,7 @@
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 10px;
   padding: 10px 14px;
-  z-index: 200;
+  z-index: 260;
   min-width: 190px;
   box-shadow: 0 12px 40px rgba(0,0,0,0.6);
 }
@@ -328,7 +331,7 @@
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 10px;
   padding: 10px 14px;
-  z-index: 200;
+  z-index: 260;
   min-width: 160px;
   box-shadow: 0 12px 40px rgba(0,0,0,0.6);
 }
@@ -360,7 +363,7 @@
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 10px;
   padding: 14px 16px;
-  z-index: 200;
+  z-index: 260;
   min-width: 240px;
   box-shadow: 0 12px 40px rgba(0,0,0,0.6);
 }

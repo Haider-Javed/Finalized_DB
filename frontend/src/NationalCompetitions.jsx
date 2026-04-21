@@ -40,7 +40,7 @@ function FilterPill({ label, value, options, onChange, icon: Icon, accent = '#7e
   const [open, setOpen] = useState(false);
   const active = value !== 'All';
   return (
-    <div style={{ position: 'relative' }} onBlur={() => setTimeout(() => setOpen(false), 150)}>
+    <div style={{ position: 'relative', zIndex: open ? 140 : 1 }} onBlur={() => setTimeout(() => setOpen(false), 150)}>
       <button
         onClick={() => setOpen(p => !p)}
         style={{
@@ -58,7 +58,7 @@ function FilterPill({ label, value, options, onChange, icon: Icon, accent = '#7e
       </button>
       {open && (
         <ul onClick={e => e.stopPropagation()} style={{
-          position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 500,
+          position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 150,
           background: 'rgba(8,12,26,.98)', backdropFilter: 'blur(24px)',
           border: '1px solid rgba(255,255,255,.1)', borderRadius: 14,
           padding: '6px', minWidth: 240, maxHeight: 280, overflowY: 'auto',
@@ -405,6 +405,7 @@ export default function NationalCompetitions({ onBack }) {
           display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
           marginBottom: 28, padding: '14px 18px',
           background: 'rgba(6,10,22,.7)', backdropFilter: 'blur(20px)',
+          position: 'relative', zIndex: 120, overflow: 'visible',
           border: '1px solid rgba(255,255,255,.07)', borderRadius: 16,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#3d4f6d', fontSize: 12, fontWeight: 700, letterSpacing: '.06em' }}>
@@ -457,7 +458,7 @@ export default function NationalCompetitions({ onBack }) {
             </button>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 18, position: 'relative', zIndex: 20 }}>
             {result.map((row, idx) => (
               <CompCard key={row._id || idx} row={row} idx={idx} allUnis={allUnis} />
             ))}
