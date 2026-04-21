@@ -18,6 +18,9 @@ import Resources from './Resources';
 import './Hub.css';
 import './App.css';
 
+// API URL - use environment variable or fallback to localhost
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 function App() {
   const [currentView, setCurrentView] = useState('signup'); // 'signup', 'login', 'welcome', ...
   const [user, setUser] = useState(null); // { userId, username, email, profilePic }
@@ -37,7 +40,7 @@ function App() {
     if (password !== confirm) return setErrorMsg("Passwords do not match");
 
     try {
-      const res = await fetch('http://localhost:3000/signup', {
+      const res = await fetch(`${API_URL}/signup`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password })
       });
@@ -58,7 +61,7 @@ function App() {
     const password = e.target.password.value;
 
     try {
-      const res = await fetch('http://localhost:3000/login', {
+      const res = await fetch(`${API_URL}/login`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
@@ -88,7 +91,7 @@ function App() {
       setUser({ ...user, profilePic: base64String }); // Optimistic update
       
       try {
-        await fetch('http://localhost:3000/update-profile', {
+        await fetch(`${API_URL}/update-profile`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: user.userId, profilePic: base64String })
         });

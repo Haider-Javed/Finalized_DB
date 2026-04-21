@@ -6,6 +6,9 @@ import {
 } from 'lucide-react';
 import WelcomeBackground from './WelcomeBackground';
 
+// API URL for competitions backend
+const COMPETITIONS_API_URL = import.meta.env.VITE_COMPETITIONS_API_URL || 'http://localhost:5000';
+
 // ─── Data helpers ─────────────────────────────────────────────────────────────
 
 const PLATFORM = {
@@ -266,7 +269,7 @@ export default function Problems({ onBack, user }) {
   const PER_PAGE = 24;
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/problems')
+    fetch(`${COMPETITIONS_API_URL}/api/problems`)
       .then(r => { if (!r.ok) throw new Error('API Error'); return r.json(); })
       .then(d => { setProblems(d || []); setLoading(false); })
       .catch(e => { setErrorMsg('Failed to connect to problem vault.'); setLoading(false); });

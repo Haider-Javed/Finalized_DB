@@ -7,6 +7,9 @@ import {
 } from 'lucide-react';
 import WelcomeBackground from './WelcomeBackground';
 
+// API URL for competitions backend
+const COMPETITIONS_API_URL = import.meta.env.VITE_COMPETITIONS_API_URL || 'http://localhost:5000';
+
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
 const MONTHS = [
@@ -308,7 +311,7 @@ export default function NationalCompetitions({ onBack }) {
   const [modeFilter, setModeFilter]     = useState('All');
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/competitions')
+    fetch(`${COMPETITIONS_API_URL}/api/competitions`)
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(d  => { setCompetitions(d); setLoading(false); })
       .catch(e => { setFetchError(e.message); setLoading(false); });

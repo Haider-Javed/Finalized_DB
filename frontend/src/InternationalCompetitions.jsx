@@ -6,6 +6,9 @@ import {
 } from 'lucide-react';
 import WelcomeBackground from './WelcomeBackground';
 
+// API URL for competitions backend
+const COMPETITIONS_API_URL = import.meta.env.VITE_COMPETITIONS_API_URL || 'http://localhost:5000';
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function fmtDate(iso) {
@@ -318,7 +321,7 @@ export default function InternationalCompetitions({ onBack }) {
     else setRefreshing(true);
     setError(null);
     try {
-      const res = await fetch('http://localhost:5000/api/international-competitions');
+      const res = await fetch(`${COMPETITIONS_API_URL}/api/international-competitions`);
       if (!res.ok) throw new Error(`Server returned ${res.status}`);
       const data = await res.json();
       setContests(processData(data));
