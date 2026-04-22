@@ -44,7 +44,7 @@ function Counter({ to, duration = 800 }) {
 }
 
 // ─── Pill filter ─────────────────────────────────────────────────────────────
-function Pill({ label, icon: Icon, value, options, onChange, accentColor = '#7eaaff' }) {
+function Pill({ label, icon: Icon, value, options, onChange, accentColor = '#7eaaff', formatValue = v => v }) {
   const [open, setOpen] = useState(false);
   const active = value !== 'All';
   const wrapRef = useRef();
@@ -70,7 +70,7 @@ function Pill({ label, icon: Icon, value, options, onChange, accentColor = '#7ea
         }}
       >
         {Icon && <Icon size={13} />}
-        {active ? value : label}
+        {active ? formatValue(value) : label}
         <ChevronDown size={12} style={{ opacity: 0.5, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
       </button>
 
@@ -95,7 +95,7 @@ function Pill({ label, icon: Icon, value, options, onChange, accentColor = '#7ea
               onMouseLeave={e => { if (value !== opt) e.currentTarget.style.background = 'transparent'; }}
             >
               {value === opt && <span style={{ color: accentColor, fontSize: 10 }}>●</span>}
-              {opt === 'All' ? `All ${label}s` : opt}
+              {opt === 'All' ? `All ${label}s` : formatValue(opt)}
             </li>
           ))}
         </ul>
@@ -276,10 +276,10 @@ export default function Problems({ onBack, user }) {
   }, []);
 
   const platforms    = ['All', ...new Set(problems.map(p => p.platform).filter(Boolean))];
-  const difficulties = ['All', 'Easy', 'Medium', 'Hard'];
+  const difficulties = ['All', 'Easy', 'Medium', 'Hard', 'Unknown'];
   const topics = useMemo(() => {
     const s = new Set();
-    problems.forEach(p => (p.tags || []).forEach(t => s.add(t)));
+    problems.forEach(p => (p.tags || []).forEach(t => s.add(t.toLowerCase())));
     return ['All', ...Array.from(s).sort()];
   }, [problems]);
 
@@ -288,8 +288,8 @@ export default function Problems({ onBack, user }) {
     const q = search.trim().toLowerCase();
     if (q) d = d.filter(p => p.title?.toLowerCase().includes(q) || p.problemId?.toLowerCase().includes(q));
     if (platformF !== 'All') d = d.filter(p => p.platform === platformF);
-    if (diffF    !== 'All') d = d.filter(p => p.difficulty === diffF);
-    if (topicF   !== 'All') d = d.filter(p => (p.tags || []).includes(topicF));
+    if (diffF    !== 'All') d = d.filter(p => p.difficulty?.toLowerCase() === diffF.toLowerCase());
+    if (topicF   !== 'All') d = d.filter(p => (p.tags || []).some(t => t.toLowerCase() === topicF));
     return d;
   }, [problems, search, platformF, diffF, topicF]);
 
@@ -298,9 +298,9 @@ export default function Problems({ onBack, user }) {
   const displayed = filtered.slice(0, page * PER_PAGE);
   const hasMore   = displayed.length < filtered.length;
 
-  const easyCount   = problems.filter(p => p.difficulty?.toLowerCase() === 'easy').length;
-  const mediumCount = problems.filter(p => p.difficulty?.toLowerCase() === 'medium').length;
-  const hardCount   = problems.filter(p => p.difficulty?.toLowerCase() === 'hard').length;
+  const easyCount   = filtered.filter(p => p.difficulty?.toLowerCase() === 'easy').length;
+  const mediumCount = filtered.filter(p => p.difficulty?.toLowerCase() === 'medium').length;
+  const hardCount   = filtered.filter(p => p.difficulty?.toLowerCase() === 'hard').length;
 
   if (loading) return (
     <div className="app-container dashboard-bg" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 24 }}>
@@ -374,10 +374,10 @@ export default function Problems({ onBack, user }) {
 
           {/* Stats row */}
           <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', maxWidth: 600, margin: '0 auto' }}>
-            <StatCard count={problems.length} label="Total Problems" color="#7eaaff" glow="0 0 8px #7eaaff66" total={problems.length} />
-            <StatCard count={easyCount}   label="Easy"   color="#22d3a0" glow="0 0 8px #22d3a066" total={problems.length} />
-            <StatCard count={mediumCount} label="Medium" color="#ffb800" glow="0 0 8px #ffb80066" total={problems.length} />
-            <StatCard count={hardCount}   label="Hard"   color="#f43f5e" glow="0 0 8px #f43f5e66" total={problems.length} />
+            <StatCard count={filtered.length} label="Filtered Problems" color="#7eaaff" glow="0 0 8px #7eaaff66" total={filtered.length} />
+            <StatCard count={easyCount}   label="Easy"   color="#22d3a0" glow="0 0 8px #22d3a066" total={filtered.length} />
+            <StatCard count={mediumCount} label="Medium" color="#ffb800" glow="0 0 8px #ffb80066" total={filtered.length} />
+            <StatCard count={hardCount}   label="Hard"   color="#f43f5e" glow="0 0 8px #f43f5e66" total={filtered.length} />
           </div>
         </div>
 
@@ -387,6 +387,7 @@ export default function Problems({ onBack, user }) {
           marginBottom: 28, padding: '14px 18px',
           background: 'rgba(6,10,22,0.7)', backdropFilter: 'blur(20px)',
           border: '1px solid rgba(255,255,255,.07)', borderRadius: 16,
+          position: 'relative', zIndex: 150, overflow: 'visible',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#4a5a7a', fontSize: 12, fontWeight: 700, letterSpacing: '0.06em', marginRight: 4 }}>
             <Filter size={12} /> FILTERS
@@ -409,9 +410,11 @@ export default function Problems({ onBack, user }) {
 
           <div style={{ width: 1, height: 26, background: 'rgba(255,255,255,.07)' }} />
 
-          <Pill label="Platform"   value={platformF} options={platforms}    onChange={setPlatformF} icon={Globe2} accentColor="#ffa116" />
+          <div style={{ width: 1, height: 26, background: 'rgba(255,255,255,.07)' }} />
+
+          <Pill label="Platform"   value={platformF} options={platforms}    onChange={setPlatformF} icon={Globe2} accentColor="#ffa116" formatValue={v => v === 'leetcode' ? 'LeetCode' : (v === 'codeforces' ? 'Codeforces' : v)} />
           <Pill label="Difficulty" value={diffF}      options={difficulties} onChange={setDiffF}      icon={Flame} accentColor="#f43f5e" />
-          <Pill label="Topic"      value={topicF}     options={topics}       onChange={setTopicF}     icon={Tag}   accentColor="#a78bfa" />
+          <Pill label="Topic"      value={topicF}     options={topics}       onChange={setTopicF}     icon={Tag}   accentColor="#a78bfa" formatValue={v => v === 'All' ? 'All' : v.charAt(0).toUpperCase() + v.slice(1)} />
 
           {(platformF !== 'All' || diffF !== 'All' || topicF !== 'All' || search) && (
             <button
