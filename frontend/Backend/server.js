@@ -17,6 +17,10 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log('✅ Connected to CompetitionPortal'))
   .catch(err => console.error('❌ Connection error:', err));
 
+// ── Resources Route ─────────────────────────────────────────────────────────
+const resourceRoutes = require('./routes/resources');
+app.use('/api/resources', resourceRoutes);
+
 const competitionSchema = new mongoose.Schema({
   competition_name: String,
   host_university: String,
@@ -49,6 +53,7 @@ const problemSchema = new mongoose.Schema({
 }, { collection: 'coding_problems' });
 
 const Problem = mongoose.model('Problem', problemSchema);
+
 // ── National Competitions (MongoDB) ────────────────────────────────────────
 app.get('/api/competitions', async (req, res) => {
   try {
@@ -68,7 +73,6 @@ app.get('/api/competitions', async (req, res) => {
 const CLIST_USERNAME = 'hajaved1023';
 const CLIST_API_KEY  = 'f55baad1e17c76f80c2f026b819a2d9caf9acc8c';
 
-/** Tiny helper: fetch a URL via Node's built-in https and parse JSON */
 function fetchJSON(url) {
   return new Promise((resolve, reject) => {
     https.get(url, { headers: { 'User-Agent': 'ContestHub/1.0' } }, (res) => {
@@ -89,10 +93,10 @@ app.get('/api/international-competitions', async (req, res) => {
       `username=${CLIST_USERNAME}`,
       `api_key=${CLIST_API_KEY}`,
       'format=json',
-      'upcoming=true',        // only upcoming + currently running
-      'order_by=start',       // soonest first
-      'limit=50',             // max 50 results per page
-      'with_resources=true',  // include platform icon / name
+      'upcoming=true',
+      'order_by=start',
+      'limit=50',
+      'with_resources=true',
     ].join('&');
 
     const url  = `https://clist.by/api/v4/contest/?${params}`;
@@ -112,7 +116,6 @@ app.get('/api/problems', async (req, res) => {
     if (req.query.platform) filters.platform = req.query.platform;
     if (req.query.difficulty) filters.difficulty = req.query.difficulty;
 
-    // Retrieve all fetched problems
     const problems = await Problem.find(filters);
     res.status(200).json(problems);
   } catch (err) {
@@ -120,6 +123,7 @@ app.get('/api/problems', async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
 // ── Start ──────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Running on http://localhost:${PORT}`));

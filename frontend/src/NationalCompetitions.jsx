@@ -19,7 +19,7 @@ const MONTHS = [
   'September','October','November','December','Dec / Jan',
 ];
 
-// All card columns/fields that can be toggled
+//JSON format for competitions:
 const ALL_COLUMNS = [
   { key: 'competition_name', label: 'Name' },
   { key: 'host_university',  label: 'University' },

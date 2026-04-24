@@ -5,6 +5,8 @@ const app = express();
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' })); // Support base64 profile pictures
+const resourceRoutes = require('./routes/resources');
+app.use('/api/resources', resourceRoutes);
 
 // 1. Connect to MongoDB Atlas (so no local DB install is needed)
 const MONGO_URI = 'mongodb://db_user:db-project-password@ac-rosqmsc-shard-00-00.f5p9msj.mongodb.net:27017,ac-rosqmsc-shard-00-01.f5p9msj.mongodb.net:27017,ac-rosqmsc-shard-00-02.f5p9msj.mongodb.net:27017/CompetitionPortal?ssl=true&replicaSet=atlas-kdpz6n-shard-0&authSource=admin&appName=CS-220-Database-Project-1';
