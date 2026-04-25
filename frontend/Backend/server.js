@@ -18,7 +18,7 @@ mongoose.connect(MONGO_URI)
   .catch(err => console.error('❌ Connection error:', err));
 
 // ── Resources Route ─────────────────────────────────────────────────────────
-const resourceRoutes = require('./routes/resources');
+const resourceRoutes = require('../../Backend/routes/resources');
 app.use('/api/resources', resourceRoutes);
 
 const competitionSchema = new mongoose.Schema({
@@ -120,6 +120,46 @@ app.get('/api/problems', async (req, res) => {
     res.status(200).json(problems);
   } catch (err) {
     console.error('Problems API error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ── Solved Problems (MongoDB) ────────────────────────────────────────────────
+const solvedProblemSchema = new mongoose.Schema({
+  username: { type: String, required: true },
+  problemId: { type: mongoose.Schema.Types.ObjectId, ref: 'Problem', required: true },
+  solvedAt: { type: Date, default: Date.now }
+}, { collection: 'solved_problems' });
+
+const SolvedProblem = mongoose.model('SolvedProblem', solvedProblemSchema);
+
+// ── Solved Problems Endpoints ───────────────────────────────────────────────
+app.get('/api/solved-problems', async (req, res) => {
+  try {
+    const { username } = req.query;
+    if (!username) return res.status(400).json({ error: 'username is required' });
+    const solved = await SolvedProblem.find({ username }).select('problemId');
+    res.status(200).json(solved.map(s => s.problemId));
+  } catch (err) {
+    console.error('Solved Problems API error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.post('/api/solve-problem', async (req, res) => {
+  try {
+    const { username, problemId } = req.body;
+    if (!username || !problemId) return res.status(400).json({ error: 'username and problemId are required' });
+    
+    // Check if already solved
+    const existing = await SolvedProblem.findOne({ username, problemId });
+    if (existing) return res.status(400).json({ error: 'Problem already solved' });
+
+    const newSolved = new SolvedProblem({ username, problemId });
+    await newSolved.save();
+    res.status(201).json({ success: true, message: 'Problem marked as solved' });
+  } catch (err) {
+    console.error('Solve Problem API error:', err.message);
     res.status(500).json({ success: false, message: err.message });
   }
 });

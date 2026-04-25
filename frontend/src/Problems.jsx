@@ -105,7 +105,7 @@ function Pill({ label, icon: Icon, value, options, onChange, accentColor = '#7ea
 }
 
 // ─── Problem Card ─────────────────────────────────────────────────────────────
-function ProblemCard({ problem, idx }) {
+function ProblemCard({ problem, idx, isSolved, onSolve }) {
   const plt  = getPlt(problem.platform);
   const diff = getDiff(problem.difficulty);
   const tags = problem.tags || [];
@@ -215,21 +215,48 @@ function ProblemCard({ problem, idx }) {
         </div>
       )}
 
-      {/* Solve button */}
-      <a
-        href={problem.url} target="_blank" rel="noopener noreferrer"
-        style={{
-          display: 'inline-flex', alignItems: 'center', gap: 7,
-          fontSize: 13, fontWeight: 700, color: hovered ? '#fff' : plt.color,
-          background: hovered ? `linear-gradient(135deg, ${plt.color}, ${plt.color}cc)` : `${plt.color}12`,
-          border: `1px solid ${plt.color}${hovered ? '00' : '40'}`,
-          borderRadius: 10, padding: '9px 18px',
-          textDecoration: 'none', transition: 'all 0.25s',
-          boxShadow: hovered ? `0 6px 20px ${plt.color}44` : 'none',
-        }}
-      >
-        Solve Challenge <ExternalLink size={12} />
-      </a>
+      {/* Action buttons */}
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <a
+          href={problem.url} target="_blank" rel="noopener noreferrer"
+          style={{
+            flex: 1, textAlign: 'center',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+            fontSize: 13, fontWeight: 700, color: hovered ? '#fff' : plt.color,
+            background: hovered ? `linear-gradient(135deg, ${plt.color}, ${plt.color}cc)` : `${plt.color}12`,
+            border: `1px solid ${plt.color}${hovered ? '00' : '40'}`,
+            borderRadius: 10, padding: '9px 18px',
+            textDecoration: 'none', transition: 'all 0.25s',
+            boxShadow: hovered ? `0 6px 20px ${plt.color}44` : 'none',
+          }}
+        >
+          Solve <ExternalLink size={12} />
+        </a>
+        {isSolved ? (
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+            fontSize: 13, fontWeight: 700, color: '#22d3a0',
+            background: 'rgba(34,211,160,0.1)', border: '1px solid rgba(34,211,160,0.3)',
+            borderRadius: 10, padding: '9px 14px', cursor: 'default'
+          }}>
+            <Award size={14} /> Solved
+          </div>
+        ) : (
+          <button
+            onClick={onSolve}
+            style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 13, fontWeight: 700, color: '#8899bb',
+              background: 'transparent', border: '1px solid rgba(255,255,255,0.15)',
+              borderRadius: 10, padding: '9px 14px', cursor: 'pointer', transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = '#8899bb'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.background = 'transparent'; }}
+          >
+            Mark Solved
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -265,6 +292,8 @@ export default function Problems({ onBack, user }) {
   const [platformF, setPlatformF] = useState('All');
   const [diffF, setDiffF]         = useState('All');
   const [topicF, setTopicF]       = useState('All');
+  const [statusF, setStatusF]     = useState('Unsolved');
+  const [solvedIds, setSolvedIds] = useState(new Set());
   const [page, setPage]           = useState(1);
   const PER_PAGE = 24;
 
@@ -275,8 +304,49 @@ export default function Problems({ onBack, user }) {
       .catch(e => { setErrorMsg('Failed to connect to problem vault.'); setLoading(false); });
   }, []);
 
+  useEffect(() => {
+    if (user && user.username) {
+      fetch(`${COMPETITIONS_API_URL}/api/solved-problems?username=${encodeURIComponent(user.username)}`)
+        .then(r => r.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            setSolvedIds(new Set(data));
+          }
+        })
+        .catch(e => console.error("Failed to load solved problems", e));
+    }
+  }, [user]);
+
+  const handleSolve = async (problemId) => {
+    if (!user || !user.username) {
+      alert("Please log in to track solved problems.");
+      return;
+    }
+    try {
+      const res = await fetch(`${COMPETITIONS_API_URL}/api/solve-problem`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: user.username, problemId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSolvedIds(prev => {
+          const newSet = new Set(prev);
+          newSet.add(problemId);
+          return newSet;
+        });
+      } else {
+        alert(data.error || "Failed to mark as solved");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error marking as solved");
+    }
+  };
+
   const platforms    = ['All', ...new Set(problems.map(p => p.platform).filter(Boolean))];
   const difficulties = ['All', 'Easy', 'Medium', 'Hard', 'Unknown'];
+  const statuses = ['All', 'Unsolved', 'Solved'];
   const topics = useMemo(() => {
     const s = new Set();
     problems.forEach(p => (p.tags || []).forEach(t => s.add(t.toLowerCase())));
@@ -290,10 +360,12 @@ export default function Problems({ onBack, user }) {
     if (platformF !== 'All') d = d.filter(p => p.platform === platformF);
     if (diffF    !== 'All') d = d.filter(p => p.difficulty?.toLowerCase() === diffF.toLowerCase());
     if (topicF   !== 'All') d = d.filter(p => (p.tags || []).some(t => t.toLowerCase() === topicF));
+    if (statusF  === 'Unsolved') d = d.filter(p => !solvedIds.has(p._id));
+    if (statusF  === 'Solved') d = d.filter(p => solvedIds.has(p._id));
     return d;
-  }, [problems, search, platformF, diffF, topicF]);
+  }, [problems, search, platformF, diffF, topicF, statusF, solvedIds]);
 
-  useEffect(() => setPage(1), [search, platformF, diffF, topicF]);
+  useEffect(() => setPage(1), [search, platformF, diffF, topicF, statusF]);
 
   const displayed = filtered.slice(0, page * PER_PAGE);
   const hasMore   = displayed.length < filtered.length;
@@ -412,13 +484,14 @@ export default function Problems({ onBack, user }) {
 
           <div style={{ width: 1, height: 26, background: 'rgba(255,255,255,.07)' }} />
 
-          <Pill label="Platform"   value={platformF} options={platforms}    onChange={setPlatformF} icon={Globe2} accentColor="#ffa116" formatValue={v => v === 'leetcode' ? 'LeetCode' : (v === 'codeforces' ? 'Codeforces' : v)} />
+          <Pill label="Status"     value={statusF}    options={statuses}     onChange={setStatusF}    icon={Award} accentColor="#22d3a0" />
+          <Pill label="Platform"   value={platformF}  options={platforms}    onChange={setPlatformF}  icon={Globe2} accentColor="#ffa116" formatValue={v => v === 'leetcode' ? 'LeetCode' : (v === 'codeforces' ? 'Codeforces' : v)} />
           <Pill label="Difficulty" value={diffF}      options={difficulties} onChange={setDiffF}      icon={Flame} accentColor="#f43f5e" />
           <Pill label="Topic"      value={topicF}     options={topics}       onChange={setTopicF}     icon={Tag}   accentColor="#a78bfa" formatValue={v => v === 'All' ? 'All' : v.charAt(0).toUpperCase() + v.slice(1)} />
 
-          {(platformF !== 'All' || diffF !== 'All' || topicF !== 'All' || search) && (
+          {(platformF !== 'All' || diffF !== 'All' || topicF !== 'All' || statusF !== 'Unsolved' || search) && (
             <button
-              onClick={() => { setPlatformF('All'); setDiffF('All'); setTopicF('All'); setSearch(''); }}
+              onClick={() => { setPlatformF('All'); setDiffF('All'); setTopicF('All'); setStatusF('Unsolved'); setSearch(''); }}
               style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(244,63,94,.08)', border: '1px solid rgba(244,63,94,.25)', color: '#f43f5e', borderRadius: 10, padding: '9px 13px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
             >
               <X size={11} /> Clear
@@ -435,7 +508,7 @@ export default function Problems({ onBack, user }) {
           <div style={{ textAlign: 'center', padding: '80px 20px' }}>
             <Code2 size={64} color="#1a2a4a" style={{ marginBottom: 20 }} />
             <p style={{ color: '#4455aa', fontSize: 16, fontWeight: 600, marginBottom: 20 }}>No problems match your filters.</p>
-            <button onClick={() => { setPlatformF('All'); setDiffF('All'); setTopicF('All'); setSearch(''); }}
+            <button onClick={() => { setPlatformF('All'); setDiffF('All'); setTopicF('All'); setStatusF('Unsolved'); setSearch(''); }}
               style={{ background: 'rgba(99,140,255,.12)', border: '1px solid rgba(99,140,255,.3)', color: '#7eaaff', borderRadius: 12, padding: '11px 24px', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
               Clear All Filters
             </button>
@@ -443,7 +516,7 @@ export default function Problems({ onBack, user }) {
         ) : (
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-              {displayed.map((p, i) => <ProblemCard key={p._id || i} problem={p} idx={i} />)}
+              {displayed.map((p, i) => <ProblemCard key={p._id || i} problem={p} idx={i} isSolved={solvedIds.has(p._id)} onSolve={() => handleSolve(p._id)} />)}
             </div>
 
             {hasMore && (
