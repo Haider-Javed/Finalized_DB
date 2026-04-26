@@ -20,6 +20,7 @@ mongoose.connect(MONGO_URI)
 // ── Resources Route ─────────────────────────────────────────────────────────
 const resourceRoutes = require('../../Backend/routes/resources');
 app.use('/api/resources', resourceRoutes);
+const LeaderboardEntry = require('./models/leaderboardEntry');
 
 const competitionSchema = new mongoose.Schema({
   competition_name: String,
@@ -53,6 +54,27 @@ const problemSchema = new mongoose.Schema({
 }, { collection: 'coding_problems' });
 
 const Problem = mongoose.model('Problem', problemSchema);
+
+// ── Leaderboard (MongoDB) ───────────────────────────────────────────────────
+app.get('/api/leaderboard', async (req, res) => {
+  try {
+    const requestedLimit = Number(req.query.limit || 200);
+    const limit = Number.isFinite(requestedLimit) && requestedLimit > 0
+      ? Math.min(requestedLimit, 1000)
+      : 200;
+
+    const leaderboard = await LeaderboardEntry.find({})
+      .sort({ n_accounts: -1, id: 1 })
+      .limit(limit)
+      .select('-__v')
+      .lean();
+
+    res.status(200).json(leaderboard);
+  } catch (err) {
+    console.error('Leaderboard API error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
 
 // ── National Competitions (MongoDB) ────────────────────────────────────────
 app.get('/api/competitions', async (req, res) => {

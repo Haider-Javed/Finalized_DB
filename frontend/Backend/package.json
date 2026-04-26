@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node server.js",
+    "sync:leaderboard": "node syncLeaderboardFromClist.js",
+    "sync:problems": "node populateProblems.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
